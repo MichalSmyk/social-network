@@ -8,15 +8,15 @@ If the table is already created in the database, you can skip this step.
 
 Otherwise, [follow this recipe to design and create the SQL schema for your table](./single_table_design_recipe_template.md).
 
-*In this template, we'll use an example table `students`*
+*In this template, we'll use an example table `user_accounts`*
 
 ```
 # EXAMPLE
 
-Table: students
+Table: user_accounts
 
 Columns:
-id | name | cohort_name
+id | email | user_name
 ```
 
 ## 2. Create Test SQL seeds
@@ -27,7 +27,7 @@ If seed data is provided (or you already created it), you can skip this step.
 
 ```sql
 -- EXAMPLE
--- (file: spec/seeds_{table_name}.sql)
+-- (file: spec/seeds_user_accounts.sql)
 
 -- Write your SQL seed here. 
 
@@ -35,13 +35,13 @@ If seed data is provided (or you already created it), you can skip this step.
 -- so we can start with a fresh state.
 -- (RESTART IDENTITY resets the primary key)
 
-TRUNCATE TABLE students RESTART IDENTITY; -- replace with your own table name.
+TRUNCATE TABLE user_accounts RESTART IDENTITY; -- replace with your own table name.
 
 -- Below this line there should only be `INSERT` statements.
 -- Replace these statements with your own seed data.
 
-INSERT INTO students (name, cohort_name) VALUES ('David', 'April 2022');
-INSERT INTO students (name, cohort_name) VALUES ('Anna', 'May 2022');
+INSERT INTO user_accounts (email, user_name) VALUES ('example@example.com', 'unicorn');
+INSERT INTO user_accounts (email, user_name) VALUES ('lalala@blablabla.com', 'butterfly');
 ```
 
 Run this SQL file on the database to truncate (empty) the table, and insert the seed data. Be mindful of the fact any existing records in the table will be deleted.
@@ -56,16 +56,16 @@ Usually, the Model class name will be the capitalised table name (single instead
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: user_accounts
 
 # Model class
-# (in lib/student.rb)
-class Student
+# (in lib/user_account.rb)
+class UserAccount
 end
 
 # Repository class
-# (in lib/student_repository.rb)
-class StudentRepository
+# (in lib/user_account_repository.rb)
+class UserAccountRepository
 end
 ```
 
@@ -75,15 +75,15 @@ Define the attributes of your Model class. You can usually map the table columns
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: user_accounts
 
 # Model class
-# (in lib/student.rb)
+# (in lib/user_account.rb)
 
-class Student
+class UserAccount
 
   # Replace the attributes by your own columns.
-  attr_accessor :id, :name, :cohort_name
+  attr_accessor :id, :email, :user_name
 end
 
 # The keyword attr_accessor is a special Ruby feature
@@ -105,40 +105,41 @@ Using comments, define the method signatures (arguments and return value) and wh
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: user_accounts
+
 
 # Repository class
-# (in lib/student_repository.rb)
+# (in lib/UserAccount_repository.rb)
 
-class StudentRepository
+class UserAccountRepository
 
   # Selecting all records
   # No arguments
   def all
     # Executes the SQL query:
-    # SELECT id, name, cohort_name FROM students;
+    # SELECT id, email, user_name FROM user_accounts;
 
-    # Returns an array of Student objects.
+    # Returns an array of User objects.
   end
 
   # Gets a single record by its ID
   # One argument: the id (number)
   def find(id)
     # Executes the SQL query:
-    # SELECT id, name, cohort_name FROM students WHERE id = $1;
+    # SELECT id, email, user_name FROM user_accounts WHERE id = $1;
 
-    # Returns a single Student object.
+    # Returns a single User object.
   end
 
   # Add more methods below for each operation you'd like to implement.
 
-  # def create(student)
+  # def create(user)
   # end
 
-  # def update(student)
+  # def update(user)
   # end
 
-  # def delete(student)
+  # def delete(id)
   # end
 end
 ```
@@ -153,32 +154,73 @@ These examples will later be encoded as RSpec tests.
 # EXAMPLES
 
 # 1
-# Get all students
+# Get all users
 
-repo = StudentRepository.new
+repo = UserAccountRepository.new
 
-students = repo.all
+users = repo.all
 
-students.length # =>  2
+users.length # =>  2
 
-students[0].id # =>  1
-students[0].name # =>  'David'
-students[0].cohort_name # =>  'April 2022'
+users[0].id # =>  1
+users[0].email # =>  'example@example.com'
+users[0].user_name # =>  'unicorn'
 
-students[1].id # =>  2
-students[1].name # =>  'Anna'
-students[1].cohort_name # =>  'May 2022'
+users[1].id # =>  2
+users[1].email # =>  'lalala@blablabla.com'
+users[1].user_name # =>  'butterfly'
 
 # 2
-# Get a single student
+# Get a single user
 
-repo = StudentRepository.new
+repo = UserAccountRepository.new
 
-student = repo.find(1)
+user = repo.find(1)
 
-student.id # =>  1
-student.name # =>  'David'
-student.cohort_name # =>  'April 2022'
+user.id # =>  1
+user.email # =>  'example@example.com'
+user.user_name # =>  'unicorn'
+
+
+# create new user 
+repo = UserAccountRepository.new
+
+user = User.new
+
+user.email # => 'example11@example.com'
+user.user_name # =>  'unicorn11'
+
+repo.create(user)
+user = repo.all
+last_user.email # => 'example11@example.com'
+last_user.user_name # =>  'unicorn11'
+
+# delete
+
+repo = UserAccountRepository.new
+
+id_to_delete = 1
+repo.delete(id_to_delete)
+
+all_users = repo.all
+all_users.length # => 1
+all_users.first.id # => 2
+
+# update
+repo = UserAccountRepository.new
+
+user = repo.find(1)
+
+user.email = 'another@email.com'
+user.user_name = 'just_horse'
+
+repo.update(user)
+
+updated_user = repo.find(1)
+
+updated_user.email # => 'another@email.com'
+updated_user.user_name # => 'just_horse'
+
 
 # Add more examples for each method
 ```

@@ -8,15 +8,15 @@ If the table is already created in the database, you can skip this step.
 
 Otherwise, [follow this recipe to design and create the SQL schema for your table](./single_table_design_recipe_template.md).
 
-*In this template, we'll use an example table `students`*
+*In this template, we'll use an example table `user_accounts`*
 
 ```
 # EXAMPLE
 
-Table: students
+Table: posts
 
 Columns:
-id | name | cohort_name
+id | content | title | view | user_id
 ```
 
 ## 2. Create Test SQL seeds
@@ -27,7 +27,7 @@ If seed data is provided (or you already created it), you can skip this step.
 
 ```sql
 -- EXAMPLE
--- (file: spec/seeds_{table_name}.sql)
+-- (file: spec/seeds_user_accounts.sql)
 
 -- Write your SQL seed here. 
 
@@ -35,13 +35,14 @@ If seed data is provided (or you already created it), you can skip this step.
 -- so we can start with a fresh state.
 -- (RESTART IDENTITY resets the primary key)
 
-TRUNCATE TABLE students RESTART IDENTITY; -- replace with your own table name.
+TRUNCATE TABLE user_accounts, posts RESTART IDENTITY; -- replace with your own table name.
 
 -- Below this line there should only be `INSERT` statements.
 -- Replace these statements with your own seed data.
 
-INSERT INTO students (name, cohort_name) VALUES ('David', 'April 2022');
-INSERT INTO students (name, cohort_name) VALUES ('Anna', 'May 2022');
+INSERT INTO posts (content, title, view, user_id) VALUES ('first content', 'first title', 25, 1);
+INSERT INTO posts (content, title, view, user_id) VALUES ('second content', 'second title', 15, 2);
+
 ```
 
 Run this SQL file on the database to truncate (empty) the table, and insert the seed data. Be mindful of the fact any existing records in the table will be deleted.
@@ -56,16 +57,16 @@ Usually, the Model class name will be the capitalised table name (single instead
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: posts
 
 # Model class
-# (in lib/student.rb)
-class Student
+# (in lib/post.rb)
+class Post
 end
 
 # Repository class
-# (in lib/student_repository.rb)
-class StudentRepository
+# (in lib/post_repository.rb)
+class PostRepository
 end
 ```
 
@@ -75,15 +76,15 @@ Define the attributes of your Model class. You can usually map the table columns
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: posts
 
 # Model class
-# (in lib/student.rb)
+# (in lib/post.rb)
 
-class Student
+class Post
 
   # Replace the attributes by your own columns.
-  attr_accessor :id, :name, :cohort_name
+  attr_accessor :id, :content, :title, :view, :user_id
 end
 
 # The keyword attr_accessor is a special Ruby feature
@@ -105,41 +106,54 @@ Using comments, define the method signatures (arguments and return value) and wh
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: posts
+
 
 # Repository class
-# (in lib/student_repository.rb)
+# (in lib/post_repository.rb)
 
-class StudentRepository
+class PostRepository
 
   # Selecting all records
   # No arguments
   def all
     # Executes the SQL query:
-    # SELECT id, name, cohort_name FROM students;
+    # SELECT id,content, title, view, user_id FROM posts;
 
-    # Returns an array of Student objects.
+    # Returns an array of Post objects.
   end
 
   # Gets a single record by its ID
   # One argument: the id (number)
   def find(id)
     # Executes the SQL query:
-    # SELECT id, name, cohort_name FROM students WHERE id = $1;
+    # SELECT id,content, title, view, user_id FROM posts WHERE id = $1;
 
-    # Returns a single Student object.
+    # Returns a single Post object.
   end
 
   # Add more methods below for each operation you'd like to implement.
 
-  # def create(student)
-  # end
+  def create(post)
+  # Executes the SQL query:
+    # `INSERT INTO posts (content, title, view, user_id) VALUES ($1, $2, $3, $4);
 
-  # def update(student)
-  # end
+    # Returns nothing
+  end
 
-  # def delete(student)
-  # end
+  def update(post)
+  # Executes the SQL query:
+    # UPDATE posts SET content = $1 ,title = $2, view = $3, user_id = $4 WHERE id = $5;
+
+    # Returns nothing
+  end
+
+  def delete(id)
+  # Executes the SQL query:
+    # DELETGE FROM posts WHERE id =$1;
+
+    # Returns nothing
+  end
 end
 ```
 
@@ -153,32 +167,84 @@ These examples will later be encoded as RSpec tests.
 # EXAMPLES
 
 # 1
-# Get all students
+# Get all posts
 
-repo = StudentRepository.new
+repo = PostRepository.new
 
-students = repo.all
+posts = repo.all
 
-students.length # =>  2
+posts.length # =>  2
 
-students[0].id # =>  1
-students[0].name # =>  'David'
-students[0].cohort_name # =>  'April 2022'
+posts[0].id # =>  1
+posts[0].content # =>  'first content'
+posts[0].title # =>  'first title'
+posts[0].view # =>  '25'
+posts[0].user_id # =>  '1'
 
-students[1].id # =>  2
-students[1].name # =>  'Anna'
-students[1].cohort_name # =>  'May 2022'
+posts[1].id # =>  1
+posts[1].content # =>  'second content'
+posts[1].title # =>  'second title'
+posts[1].view # =>  '15'
+posts[1].user_id # =>  '2'
 
 # 2
-# Get a single student
+# Get a single post
 
-repo = StudentRepository.new
+repo = PostRepository.new
 
-student = repo.find(1)
+user = repo.find(1)
+posts.id # =>  1
+posts.content # =>  'first content'
+posts.title # =>  'first title'
+posts.view # =>  '25'
+posts.user_id # =>  '1'
 
-student.id # =>  1
-student.name # =>  'David'
-student.cohort_name # =>  'April 2022'
+# create new post
+repo = PostRepository.new
+
+posts = Post.new
+
+posts.content # =>  'third content'
+posts.title # =>  'third title'
+posts.view # =>  '255'
+posts.user_id # =>  '3'
+
+repo.create(post)
+posts = repo.all
+posts.content # =>  'third content'
+posts.title # =>  'third title'
+posts.view # =>  '255'
+posts.user_id # =>  '3'
+
+# delete
+
+repo = PostRepository.new
+
+id_to_delete = 1
+repo.delete(id_to_delete)
+
+all_posts = repo.all
+all_posts.length # => 1
+all_posts.first.id # => 2
+
+# update
+repo = PostRepository.new
+
+posts = repo.find(1)
+
+posts.content # =>  'forth content'
+posts.title # =>  'forth title'
+posts.view # =>  '100'
+posts.user_id # =>  '4'
+
+repo.update(post)
+
+updated_posts = repo.find(1)
+
+updated_posts.content # =>  'forth content'
+updated_posts.title # =>  'forth title'
+updated_posts.view # =>  '100'
+updated_posts.user_id # =>  '4'
 
 # Add more examples for each method
 ```

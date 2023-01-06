@@ -31,7 +31,7 @@ I'd like each of my posts to have a number of views.
 
 ```
 Nouns:
-
+user account, email address, username, timeline, post id, content, number of views title
 
 ```
 
@@ -41,16 +41,16 @@ Put the different nouns in this table. Replace the example with your own nouns.
 
 | Record                | Properties          |
 | --------------------- | ------------------  |
-| album                 | title, release year
-| artist                | name
+| user_account          | email, user_name
+| post                  | content, title, views, 
 
-1. Name of the first table (always plural): `albums` 
+1. Name of the first table (always plural): `user_accounts` 
 
-    Column names: `title`, `release_year`
+    Column names: `email`, `user_name`
 
-2. Name of the second table (always plural): `artists` 
+2. Name of the second table (always plural): `posts` 
 
-    Column names: `name`
+    Column names: `content`, `title`, `views`, 
 
 ## 3. Decide the column types.
 
@@ -63,14 +63,16 @@ Remember to **always** have the primary key `id` as a first column. Its type wil
 ```
 # EXAMPLE:
 
-Table: albums
+Table: user_accounts
 id: SERIAL
-title: text
-release_year: int
+email: text
+user_name: text
 
 Table: artists
 id: SERIAL
-name: text
+content: text
+title: text
+view: int
 ```
 
 ## 4. Decide on The Tables Relationship
@@ -109,25 +111,27 @@ Replace the relevant bits in this example with your own:
 
 ```sql
 -- EXAMPLE
--- file: albums_table.sql
+-- file: user_accounts_table.sql
 
 -- Replace the table name, columm names and types.
 
 -- Create the table without the foreign key first.
-CREATE TABLE artists (
+CREATE TABLE user_accounts (
   id SERIAL PRIMARY KEY,
-  name text,
+  email text
+  user_name text
 );
 
 -- Then the table with the foreign key first.
-CREATE TABLE albums (
+CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
+  content text,
   title text,
-  release_year int,
+  view int
 -- The foreign key name is always {other_table_singular}_id
-  artist_id int,
-  constraint fk_artist foreign key(artist_id)
-    references artists(id)
+  user_id int,
+  constraint fk_user foreign key(user_id)
+    references users_account(id)
     on delete cascade
 );
 
@@ -136,6 +140,6 @@ CREATE TABLE albums (
 ## 5. Create the tables.
 
 ```bash
-psql -h 127.0.0.1 database_name < albums_table.sql
+psql -h 127.0.0.1 social_network < social_network_table.sql
 ```
 
