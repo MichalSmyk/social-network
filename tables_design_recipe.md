@@ -32,7 +32,7 @@ I'd like each of my posts to have a number of views.
 ```
 Nouns:
 
-album, title, release year, artist, name
+
 ```
 
 ## 2. Infer the Table Name and Columns
